@@ -33,7 +33,7 @@ port = 1433
 user = 'useresb'
 password = 'mitoeasybuser201612'
 database = 'dummy_easyb' #'dummy_easyb' # 'dummy_easyb_live' # 'dummy_easyb_vnc' #
-database = 'MITO2024' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
+database = 'MAJU' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
 
 ##### REAMRRKKKKS:
 # update createProductTrannsfer function to set CreateBy and EditBy to UserLogin include GDV
@@ -1599,6 +1599,7 @@ def createProductTrannsfer():
     file_path = os.path.join("Import", fname)   # otomatis bikin path Import/fname
     if not os.path.exists(file_path):
         print(Fore.RED +f"❌ File {fname} not found, Please check the file in the import folder.\n")
+        input(Fore.LIGHTGREEN_EX +"Press Enter to Main Menu...")
         main()
         return True
     
@@ -1659,6 +1660,7 @@ def createProductTrannsfer():
     BranchIDDestination = rows[0] if rows else None
     LocationIDDestination = rows[2]
 
+    dataframe1.iloc[6:, 0] = dataframe1.iloc[6:, 0].astype(str)
     sku_list = tuple(dataframe1.iloc[6:, 0].tolist())
     sku_tuple = str(tuple(sku_list)).replace(",)", ")")
     sql_product = f"""select field1 'SKU', ProductID from MsProduct where Field1 in {sku_tuple}"""
