@@ -15,6 +15,7 @@ import csv
 import pandas as pd
 from colorama import init, Fore, Style
 from decimal import Decimal
+import sys
 
 init(autoreset=True)  # biar warna otomatis reset
 
@@ -42,9 +43,10 @@ database = 'MAJU' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
 # 2025-11-07-2 - add condition where warehourse id to create transaction
 # 2025-11-11 - add update product to iseller function
 # 2025-11-19 - add create product iseller
+# 2025-11-21 - update based query to master product to include len(field1) > 11 # product maju
 
 global Version
-Version = "251119"
+Version = "251121"
 
 print(f'Connect to {database[:3]}...')
 conn = pymssql.connect(server=server, port=port, user=user, password=password, database=database,autocommit=False)
@@ -57,7 +59,7 @@ Apps = f"##### MEI Custom Apps v.{Version} #####"
 def load_menu(selected=None):
     if not conn:
         print("Unable to connect to EasyB server.")
-        exit()
+        sys.exit()
     cond = ""
     if not selected:
         cond = " and code <=9 "
@@ -110,7 +112,7 @@ def cekVersion():
         print(Fore.RED +"❌ Application has been outdated.\n")
         input(Fore.LIGHTGREEN_EX +"Press Enter to exit...")
         clear()
-        exit()
+        sys.exit()
     return True
 
 def main():
@@ -171,7 +173,7 @@ def main():
             print("    [27] Lookup Supplier/Vendor by Name contains")
             print("    [28] Create Supplier/Vendor")
             cmd21_query = input(Fore.LIGHTGREEN_EX +"Select Lookup by: ")
-            sql_Query = "SELECT ProductID, Field1 SKU, ProductName FROM MsProduct where 1=1 and flagactive=1 and CreateBy in ('usermaju','import','purchase') and ProductID >= 77471 "
+            sql_Query = "SELECT ProductID, Field1 SKU, ProductName FROM MsProduct where 1=1 and flagactive=1 and (CreateBy in ('usermaju','import','purchase') and ProductID >= 77471 or len(field1) > 11) "
             if cmd21_query == '20':
                 masterProduct(sql_Query + " order by productName")
                 
@@ -289,7 +291,7 @@ def main():
             else:
                 return False
         elif menu == '0':
-            exit()
+            sys.exit()
         else:
             print(Fore.RED +"❌ Menu not found. Please select 1, 2, 3.\n\n")
             # load_menu()
@@ -299,7 +301,7 @@ def masterProduct(sql_Query):
     # print("Implement your function logic here transactionPO")
     if not conn:
         print("Unable to connect to EasyB server.")
-        exit()
+        sys.exit()
     # else:
     #     print(f'Koneksi Datebase {database} Berhasil!!!!!!!!')  
 
@@ -351,7 +353,7 @@ def masterProduct(sql_Query):
 def importPO2():
     if not conn:
         print("Unable to connect to EasyB server.")
-        exit()
+        sys.exit()
     else:
         print(f'Connecting to Database {database[:3]} successful!')  
     
@@ -539,7 +541,7 @@ def importPO2():
 # def importPO():
 #     if not conn:
 #         print("Unable to connect to EasyB server.")
-#         exit()
+#         sys.exit()
 #     else:
 #         print(f'Connecting to Database {database[:3]} successful!')  
     
@@ -659,7 +661,7 @@ def importPO2():
 # def importPO_xlsx():
 #     if not conn:
 #         print("Unable to connect to EasyB server.")
-#         exit()
+#         sys.exit()
 #     else:
 #         print(f'Connecting to Database {database[:3]} successful!')  
 
@@ -763,7 +765,7 @@ def createNewProduct(import_mode=None):
         return True
     if not conn:
         print("Unable to connect to EasyB server.")
-        exit()
+        sys.exit()
 
     sql_user_branch = f"""select top 1 BranchID from MsUser where UserName = '{UserLogin}'"""
     cursor = conn.cursor()
@@ -1005,7 +1007,7 @@ def createVendor():
     
     if not conn:
         print("Unable to connect to EasyB server.")
-        exit()
+        sys.exit()
     
     cursor = conn.cursor()
     sql_check_vendor = f"""SELECT SupplierID, StoreName FROM MsSupplier WHERE StoreName = '{vendor_name}'"""
@@ -1033,7 +1035,7 @@ def createVendor():
 def reportStockAll():
     if not conn:
         print("Unable to connect to EasyB server.")
-        exit()
+        sys.exit()
     else:
         print(f'Connecting to Database {database[:3]} successful!')  
 
@@ -1098,7 +1100,7 @@ def reportStockAll():
 def reportPendingProductTransfer():
     if not conn:
         print("Unable to connect to EasyB server.")
-        exit()
+        sys.exit()
     else:
         print(f'Connecting to Database {database[:3]} successful!')  
 
@@ -1157,7 +1159,7 @@ def createNewProductIseller(import_mode=None):
         return True
     if not conn:
         print("Unable to connect to EasyB server.")
-        exit()
+        sys.exit()
     
     sql_iseller_token = f"""SELECT Token FROM tmp_iseller_token WHERE id= 1 AND Token IS NOT NULL"""
     cursor = conn.cursor()
@@ -1581,7 +1583,7 @@ def createPromoNonTrigger():
 def createProductTrannsfer():
     if not conn:
         print("Unable to connect to EasyB server.")
-        exit()
+        sys.exit()
     else:
         print(f'Connecting to Database {database[:3]} successful!')  
 
