@@ -1,7 +1,7 @@
 import hashlib
 import pymssql
 import datetime
-from datetime import date, timedelta
+from datetime import datetime, date,time, timedelta
 import logging
 import time
 import calendar
@@ -34,7 +34,7 @@ port = 1433
 user = 'useresb'
 password = 'mitoeasybuser201612'
 database = 'dummy_easyb' #'dummy_easyb' # 'dummy_easyb_live' # 'dummy_easyb_vnc' #
-database = 'MAJU' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
+database = 'MITO2024' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
 
 ##### REAMRRKKKKS:
 # update createProductTrannsfer function to set CreateBy and EditBy to UserLogin include GDV
@@ -44,9 +44,10 @@ database = 'MAJU' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
 # 2025-11-11 - add update product to iseller function
 # 2025-11-19 - add create product iseller
 # 2025-11-21 - update based query to master product to include len(field1) > 11 # product maju
+# 2025-12-05 - update datetime.datetime to datetime
 
 global Version
-Version = "251121"
+Version = "251205"
 
 print(f'Connect to {database[:3]}...')
 conn = pymssql.connect(server=server, port=port, user=user, password=password, database=database,autocommit=False)
@@ -136,6 +137,7 @@ def main():
             print("    [12] Import Product Promo Special Price to Iseller")
             print("    [13] Import WHT TRPT ONLY")
             print("    [14] Import WHT Auto GDV Warehouse Transfer")
+            print("    [15] Import Absensi HRD")
             print("Select the transaction and press enter: ")
             cmd21_query = input(Fore.LIGHTGREEN_EX +"Select Transaction: ")
             if cmd21_query == '11':
@@ -154,6 +156,10 @@ def main():
                 global AutoGDV 
                 AutoGDV = True
                 createProductTrannsfer()
+                return
+            elif cmd21_query == '15':
+                # cek_user()
+                importAbsensi()
                 return
             else:
                 print(Fore.RED +"❌ Please Select the menu.\n")
@@ -610,7 +616,7 @@ def importPO2():
 #                 print(f"Line {idx}: {ProductID} - {ProductName} - Qty: {Qty} - Price: {Price} - TotalPrice: {TotalPrice}")
 
 #             values = ', '.join(values) + ";"
-#             dateFormat = datetime.datetime.now().strftime("%y%m")
+#             dateFormat = datetime.now().strftime("%y%m")
 #             cursor = conn.cursor()
 #             cursor.execute("""
 #                 SELECT TOP 1 TransNum, SUBSTRING(TransNum, 5, 100) AS seq
@@ -1339,9 +1345,9 @@ def updateProductIseller():
         products = []
         while True:
             print("[261] Update Product Manually")
-            sku = input(Fore.LIGHTGREEN_EX +"Enter the new Product SKU: ").upper().strip()
-            product_name = input(Fore.LIGHTGREEN_EX +"Enter the new Product Name: ").strip()
-            price = input(Fore.LIGHTGREEN_EX +"Enter the new Product Price: ").strip()
+            sku = input(Fore.LIGHTGREEN_EX +"Enter the Product SKU: ").upper().strip()
+            product_name = input(Fore.LIGHTGREEN_EX +"Enter the Product Name: ").strip()
+            price = input(Fore.LIGHTGREEN_EX +"Enter the Product Price: ").strip()
 
             if not sku:
                 print(Fore.RED +"❌ Product SKU is required.\n")
@@ -1429,9 +1435,11 @@ def createPromoNonTrigger():
         return True
     
     # Ambil tahun dan bulan saat ini
-    today = datetime.datetime.today()
+    today = datetime.today()
     year = today.year
     month = today.month
+
+    initialPromo =  input(Fore.LIGHTGREEN_EX +"Enter the initial promo number (skip if not needed): ").strip()
 
     # Dapatkan jumlah hari dalam bulan tersebut
     priority = (calendar.monthrange(year, month)[1] + 1) - today.day
@@ -1449,8 +1457,10 @@ def createPromoNonTrigger():
             Dates = dataframe1.iloc[row, 1]
             if pd.notna(Dates) and isinstance(Dates, str):
                 DateParts = [d.strip() for d in Dates.split(",")]
-                DateStart = datetime.datetime.strptime(DateParts[0], "%Y-%m-%d").strftime("%m/%d/%Y") if len(DateParts) > 0 else ""
-                DateEnd = datetime.datetime.strptime(DateParts[1], "%Y-%m-%d").strftime("%m/%d/%Y") if len(DateParts) > 1 else ""
+                DateStart = datetime.strptime(DateParts[0], "%Y-%m-%d").strftime("%m/%d/%Y") if len(DateParts) > 0 else ""
+                DateEnd = datetime.strptime(DateParts[1], "%Y-%m-%d").strftime("%m/%d/%Y") if len(DateParts) > 1 else ""
+                if not DateEnd:
+                    DateEnd = DateStart
             else:
                 DateStart = []
                 DateEnd = []
@@ -1460,7 +1470,7 @@ def createPromoNonTrigger():
         if row == 4:
             trigger = dataframe1.iloc[row, 1] if pd.notna(dataframe1.iloc[row, 1]) else ""
         if row == 5:
-            flashsale_day = [d.strip() for d in dataframe1.iloc[row, 1].split(",")] if pd.notna(dataframe1.iloc[row, 1]) else ""
+            flashsale_day = [d.strip() for d in dataframe1.iloc[row, 1].lower().split(",")] if pd.notna(dataframe1.iloc[row, 1]) else ""
             old_day = ['senin','selasa','rabu','kamis','jumat','sabtu','minggu']
             new_day = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
             flashsale_day = [new_day[old_day.index(day)] for day in flashsale_day]
@@ -1484,7 +1494,7 @@ def createPromoNonTrigger():
             continue
 
             # ---- produk detail ----
-        intital_promo = datetime.datetime.now().strftime("%m%d")
+        intital_promo = datetime.now().strftime("%m%d") if not initialPromo else initialPromo
         sku = dataframe1.iloc[row, 0] if pd.notna(dataframe1.iloc[row, 0]) else None
         producName = dataframe1.iloc[row, 1] if pd.notna(dataframe1.iloc[row, 1]) else None
         qty = dataframe1.iloc[row, 2] if pd.notna(dataframe1.iloc[row, 2]) else None
@@ -1688,7 +1698,7 @@ def createProductTrannsfer():
     while start_row < total_rows:
         end_row = min(start_row + batch_size, total_rows)
 
-        yearMonth = datetime.datetime.now().strftime("%y%m")
+        yearMonth = datetime.now().strftime("%y%m")
         sequence_sql = """ 
             select top 1 right(TransNum,11) from ProductTransferHead pth WHERE TransNum LIKE '%s' order by TransNum desc
         """%('TRPT'+yearMonth+'%')
@@ -1717,7 +1727,7 @@ def createProductTrannsfer():
         ProductTransferName = UserLogin
         ProductTransferApproval = UserLogin
         CreateBy = UserLogin
-        CreateDate = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        CreateDate = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         sql_transfer_head = """
         INSERT INTO ProductTransferHead (TransNum,TDate,DueDate,OriginBranch,DestinationBranch,OriginLocation,DestinationLocation,AdditionalInfo,AuthorizationNotes,Status,ProductTransferName,ProductTransferApproval,CreateBy,CreateDate)
@@ -1787,7 +1797,7 @@ def createProductTrannsfer():
             GoodsDeliveryName = UserLogin
             GoodsDeliveryApproval = UserLogin
             CreateBy = UserLogin
-            CreateDate = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            CreateDate = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
             query_goods_delivery = """
             insert into GoodsDeliveryHead (TransNum, RefNum, TransType, TDate, BranchID, LocationID, SenderID, ShippingFee, SubjectID, Driver, PoliceNumber, DeliveryInformation, AdditionalInfo, AuthorizationNotes, Status, GoodsDeliveryName, GoodsDeliveryApproval, CreateBy, CreateDate) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -1915,6 +1925,270 @@ def refreshIsellerToken():
     input(Fore.LIGHTGREEN_EX +"Press Enter to continue...")
     main()
 
+def importAbsensi():
+    # if not UserLogin:
+    #     print(Fore.RED +"❌ User not logged in.\n")
+    #     main()
+    #     return True
+    UserLogin = "usermaju"  # temp hardcode dulu
+    if UserLogin == 'usermaju':
+        while True:
+            fname = input(Fore.LIGHTGREEN_EX +"Enter the Excel file name for Absensi: ")
+            fname = "attendance.xls"
+            # if not fname.endswith('.xlsx'):
+            #     fname += '.xlsx'
+            file_path = os.path.join("Import", fname)   # otomatis bikin path Import/fname
+            if not os.path.exists(file_path):
+                print(Fore.RED +"❌ File not found.\n")
+                lagi = input(Fore.LIGHTGREEN_EX +"Try again? (y/n): ").lower()
+                if lagi != 'y':
+                    continue
+                else:
+                    break
+            else:
+                break
+        
+        xlsx_data_header = "Employee ID;Full Name;Branch;Organization;Job Position;Date;Shift;Schedule Check In;Schedule Check Out;Attendance Code;Check In;Check Out;Late In"
+        xlsx_data_detail = "MEI05297;GHILLBERTH ROXANE SUILA;PT Maju Express Indonesia - REALME;MEI - DEPO REALME AMBON;ADMIN;2025-10-27;R New;10:00;18:00;H;10:18;18:01;00:18"
+
+        # read by default 1st sheet of an excel file
+        dataframe1 = pd.read_excel(file_path, sheet_name=0, header=None)
+        lembur = []
+        lembur2 = []
+        
+        for row in range(1, len(dataframe1)):
+            Employee_ID = dataframe1.iloc[row, 0]
+            Full_Name = dataframe1.iloc[row, 1]
+            Branch = dataframe1.iloc[row, 2]
+            Organization = dataframe1.iloc[row, 3]
+            Job_Position = dataframe1.iloc[row, 4]
+            Date = dataframe1.iloc[row, 5]
+            Shift = dataframe1.iloc[row, 6]
+            Schedule_Check_In = dataframe1.iloc[row, 7]
+            Schedule_Check_Out = dataframe1.iloc[row, 8]
+            Attendance_Code = dataframe1.iloc[row, 9]
+            Check_In = str(dataframe1.iloc[row, 10]).replace("NaT", "00:00").replace("nan", "00:00").replace("None", "00:00").strip()
+            Check_Out = str(dataframe1.iloc[row, 11]).replace("NaT", "00:00").replace("nan", "00:00").replace("None", "00:00").strip()
+            Late_In = str(dataframe1.iloc[row, 12]).replace("NaT", "00:00").replace("nan", "00:00").replace("None", "00:00").strip()
+
+            Schedule_Check_In_time = datetime.strptime(Schedule_Check_In, "%H:%M").time() if Schedule_Check_In and Schedule_Check_In != "00:00" else False
+            Schedule_Check_Out_time = datetime.strptime(Schedule_Check_Out, "%H:%M").time() if Schedule_Check_Out and Schedule_Check_Out != "00:00" else False
+            Check_In = datetime.strptime(Check_In, "%H:%M").time() if Check_In and Check_In != "00:00" else False
+            Check_Out = datetime.strptime(Check_Out, "%H:%M").time() if Check_Out and Check_Out != "00:00" else False
+            Late_In = datetime.strptime(Late_In, "%H:%M").time() if Late_In and Late_In != "00:00" else False
+
+            if str(dataframe1.iloc[row,1]) == "":
+                continue  # skip header row if present
+            # if Job_Position.lower() == "e-commerce operation":
+            #     import ipdb; ipdb.set_trace()
+
+            if Job_Position.lower().strip() in ["direktur","manager","marketing manager","sales marketing","e-commerce operation","e-commerce specialist"]:
+                continue
+
+
+            print(f'Processing Data Line {row} - {Employee_ID} on Date {Date}..., cek {datetime.strptime(Schedule_Check_Out, "%H:%M").time()} ### {Check_In}-{Check_Out} {Job_Position}', end='\r', flush=True)
+
+            # if row >= 7560:
+            #     import ipdb; ipdb.set_trace()
+
+            late_deduction = 0
+            jml_amt = 0
+            if ("office pluit" in Shift.lower() or "ob maju pluit" in Shift.lower() or "dayoff" in Shift.lower() or "rs" in Shift.lower() or "r" in Shift.lower()):
+                #### ketentuan ########
+                # if row >= 12184:
+                #     print("###############", Schedule_Check_Out_time)
+                #     import ipdb; ipdb.set_trace()
+
+                meal_allowance = 15000  # default uang makan
+                if "trenly gudang" in Organization.lower():
+                    meal_allowance = 17000  # default uang makan untuk trenly gudang
+
+                print(datetime.strptime(Date, "%Y-%m-%d").date().strftime("%A"))
+                if datetime.strptime(Date, "%Y-%m-%d").date().strftime("%A") not in ["Saturday", "Sunday"] and Schedule_Check_In_time and Check_Out:
+                    start_over_time = datetime.combine(date.today(), Schedule_Check_Out_time) + timedelta(hours=1)  # lembur mulai dihitung 1 jam setelah jam pulang
+                    t1 = start_over_time
+                    t2 = datetime.combine(date.today(), Check_Out)
+                    if t2 >= t1:
+                        jml_amt = int((t2 - t1).total_seconds() / 60 / 30) * 10000  # durasi dihitung setiap 30 menit = 10000
+                        jam_makan = Check_Out >= datetime.strptime("20:00", "%H:%M").time()  # makan malam jika pulang lewat jam 8 malam
+                        meal_allowance = meal_allowance if jam_makan else 0
+                        jml_amt += 20000
+                    else:
+                        jml_amt = 0
+                        meal_allowance = 0
+                else:
+                    if not Check_In or not Check_Out:
+                        continue
+                    print(Full_Name)
+                    # if Check_In and Check_Out:
+                    t1 = datetime.combine(date.today(), Check_In)
+                    t2 = datetime.combine(date.today(), Check_Out)
+                    if t2 >= t1:
+                        jml_amt = int((t2 - t1).total_seconds() / 60 / 30) * 10000  # durasi dihitung setiap 30 menit = 10000
+                        meal_allowance = 0   # makan malam jika pulang lewat jam 8 malam
+                    else:
+                        jml_amt = 0
+                        meal_allowance = 0
+                    # else:
+                    #     jml_amt = 0
+                    #     meal_allowance = 0
+                
+                if datetime.strptime(Date, "%Y-%m-%d").date().strftime("%A") not in ["Saturday", "Sunday"] and Schedule_Check_In_time and Check_In and Check_In >= Schedule_Check_In_time:
+                    jml_late = datetime.combine(date.today(), Check_In) - datetime.combine(date.today(), Schedule_Check_In_time)
+                    late_minutes = int(jml_late.total_seconds() / 60)
+                    if late_minutes > 60:
+                        late_deduction = 40000
+                    elif late_minutes > 30:
+                        late_deduction = 25000
+                    elif late_minutes > 15:
+                        late_deduction = 15000
+                    else:
+                        late_deduction = 0
+                
+
+
+            # if Check_Out and Check_Out != "00:00" and Check_In and Check_In != "00:00":
+            #     jml_amt = 0
+            #     if datetime.strptime(Date, "%Y-%m-%d").date().strftime("%A") == "Saturday":  # Saturday
+            #         t1 = datetime.combine(date.today(), Schedule_Check_Out_time)
+            #         t2 = datetime.combine(date.today(), Check_Out)
+            #         if t2 >= t1:
+            #             jml_amt = int((t2 - t1).total_seconds() / 60 / 30) * 10000  # durasi dihitung setiap 30 menit = 10000
+            #             jml_amt += 20000
+            #         else:
+            #             jml_amt = 0
+            #     elif datetime.strptime(Date, "%Y-%m-%d").date().strftime("%A") == "Sunday":  # Sunday
+            #         t1 = datetime.combine(date.today(), Check_In)
+            #         t2 = datetime.combine(date.today(), Check_Out)
+            #         if t2 >= t1:
+            #             jml_amt = int((t2 - t1).total_seconds() / 60 / 30) * 10000  # durasi dihitung setiap 30 menit = 10000
+            #         else:
+            #             jml_amt = 0
+            #     else:
+            #         t1 = datetime.combine(date.today(), Schedule_Check_Out_time)
+            #         t2 = datetime.combine(date.today(), Check_Out)
+            #         start_over_full = datetime.combine(date.today(), Schedule_Check_Out_time)
+            #         start_over_full = start_over_full + timedelta(minutes=60)  
+            #         if t2 >= start_over_full and t2 >= t1:
+            #             jml_amt = int((t2 - t1).total_seconds() / 60 / 30) * 10000  # durasi dihitung setiap 30 menit = 10000
+            #         else:
+            #             jml_amt = 0
+
+                # UANG MAKAN
+
+
+
+                # TELATTTTTTTTTTTTTTTTTTTTTTT
+                # late_time  = datetime.combine(date.today(), Late_In).time().total_seconds() / 60 if Late_In else 0
+                # if late_time > 60:
+                #     pinalty_amt = 40000
+                # elif late_time > 30:
+                #     pinalty_amt = 20000
+                # elif late_time > 15:
+                #     pinalty_amt = 15000
+
+                if jml_amt > 0 or late_deduction > 0:
+                    lembur.append({
+                        "EmployeeID": Employee_ID,
+                        "FullName": Full_Name,
+                        "Date": Date,
+                        "CheckIn": Check_In,
+                        "CheckOut": Check_Out,
+                        "OverTimeAmount": jml_amt,
+                        "MealAllowance": meal_allowance,
+                        "LateDeductions": late_deduction,
+                    })
+                # print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+            else:
+                continue  # skip if no Check Out
+
+        if lembur:
+            df = pd.DataFrame(lembur)
+            summary_df = df.groupby(['EmployeeID', 'FullName'])[[
+                'OverTimeAmount', 
+                'MealAllowance', 
+                'LateDeductions'
+            ]].sum().reset_index()
+
+            summary_df.rename(columns={
+                'OverTimeAmount': 'TotalAmount',
+                'MealAllowance': 'totalMeal',
+                'LateDeductions': 'lateDeduction'
+            }, inplace=True)
+            lembur2 = summary_df.to_dict('records')
+
+            print(tabulate(lembur, headers="keys", tablefmt="grid"))
+            print('#######################################')
+            print(tabulate(lembur2, headers="keys", tablefmt="grid"))
+            quest = input(Fore.LIGHTGREEN_EX +"Are you want to export the query results to a XLSX file? (y/n): ").lower()
+            if quest != 'y':
+                input(Fore.LIGHTGREEN_EX +"Press Enter to continue...")
+                clear()
+                main()
+                # return True
+            # simpan ke XLSX
+            filename = input(Fore.LIGHTGREEN_EX +"Enter the output XLSX file name: ")
+            if not filename.endswith('.xlsx'):
+                filename += '.xlsx'
+            output_path = os.path.join("Export", filename)
+
+            df_detail = pd.DataFrame(lembur)   # Data detail
+            df_rekap  = pd.DataFrame(lembur2)  # Data summary yang baru dibuat
+            with pd.ExcelWriter(output_path) as writer:
+                # Tulis sheet pertama
+                df_detail.to_excel(writer, sheet_name='Detail Lembur', index=False)
+                # Tulis sheet kedua
+                df_rekap.to_excel(writer, sheet_name='Summary Total', index=False)
+
+            # df.to_excel(os.path.join("Export", filename), index=False)
+
+            print(f"Data has been exported to Folder Export/{filename}")
+            input(Fore.LIGHTGREEN_EX +"Press Enter to continue...")
+            clear()
+            main()
+
+        if not lembur:
+            print(Fore.RED +"❌ The file has no over time.\n")
+            input(Fore.LIGHTGREEN_EX +"Press Enter to continue...")
+            main()
+            # return True
+
+    else:
+        print(Fore.RED +"❌ You are not allowed to import Absensi.\n")
+        input(Fore.LIGHTGREEN_EX +"Press Enter to continue...")
+        main()
+        # return True
+
+            # if Check_Out and str(Check_Out).lower() != "nat" or str(Check_Out).lower() !=  "nan" or str(Check_Out).lower() != "none" or Check_Out != "": 
+            #     if datetime.strptime(Date, "%Y-%m-%d").date().strftime("A") == "6":  # 6 itu sabtu
+            #         jam_akhir = datetime.strptime(Schedule_Check_Out, "%H:%M").time()
+            #         jam_out = datetime.strptime(Check_Out, "%H:%M").time() if Check_Out else 0
+            #         jam_max = datetime.strptime("17:00", "%H:%M").time()
+            #         if jam_out > jam_akhir and jam_out <= jam_max:
+            #             jam_akhir = datetime.strptime(Schedule_Check_Out, "%H:%M").time()
+            #             dt1 = datetime.combine(date.today(), jam_akhir)
+            #             dt2 = datetime.combine(date.today(), jam_out)
+            #             durasi = dt2 - dt1
+            #             # durasi = jam_akhir - datetime.strptime(Check_Out, "%H:%M").time()
+            #             jml_amt = int((durasi.total_seconds() / 60) / 30) * 10000    # durasi dihitung setiap 30 menit = 10000
+            #         else:
+            #             jml_amt = 60000  # lebih dari jam 17:00
+            #     elif datetime.strptime(Date, "%Y-%m-%d").date().strftime("A") == "0":  # 0 itu minggu
+            #         jam_out = datetime.strptime(Check_Out, "%H:%M").time() if Check_Out else 0
+            #         jam_in = datetime.strptime(Check_In, "%H:%M").time()
+            #         if jam_out > jam_in:
+            #             dt1 = datetime.combine(date.today(), jam_in)
+            #             dt2 = datetime.combine(date.today(), jam_out)
+            #             durasi = dt2 - dt1
+            #             jml_amt = int((durasi.total_seconds() / 60) / 30) * 10000    # durasi dihitung setiap 30 menit = 10000
+            #     else:
+            #         jam_akhir = datetime.strptime(Schedule_Check_Out, "%H:%M").time()
+            #         jam_out = datetime.strptime(Check_Out, "%H:%M").time() if Check_Out else 0
+            #         if jam_out > jam_akhir:  # and datetime.strptime(Check_Out, "%H:%M").time() <= datetime.strptime("20:00", "%H:%M").time():
+            #             dt1 = datetime.combine(date.today(), jam_akhir)
+            #             dt2 = datetime.combine(date.today(), jam_out)
+            #             durasi = dt2 - dt1
+            #             jml_amt = int((durasi.total_seconds() / 60) / 30) * 10000    # durasi dihitung setiap 30 menit = 15000
 
 def cek_user():
     clear()
