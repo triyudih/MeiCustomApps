@@ -1934,7 +1934,7 @@ def importAbsensi():
     if UserLogin == 'usermaju':
         while True:
             fname = input(Fore.LIGHTGREEN_EX +"Enter the Excel file name for Absensi: ")
-            fname = "attendance.xls"
+            fname = "ABSEN MAJU NOV.xlsx"
             # if not fname.endswith('.xlsx'):
             #     fname += '.xlsx'
             file_path = os.path.join("Import", fname)   # otomatis bikin path Import/fname
@@ -1951,14 +1951,21 @@ def importAbsensi():
         xlsx_data_header = "Employee ID;Full Name;Branch;Organization;Job Position;Date;Shift;Schedule Check In;Schedule Check Out;Attendance Code;Check In;Check Out;Late In"
         xlsx_data_detail = "MEI05297;GHILLBERTH ROXANE SUILA;PT Maju Express Indonesia - REALME;MEI - DEPO REALME AMBON;ADMIN;2025-10-27;R New;10:00;18:00;H;10:18;18:01;00:18"
 
+        OfficeMei = ['MEI - ACCOUNTING','MEI - AUDIT','MEI - FINANCE','MEI - GA','MEI - GUDANG','MEI - HRD','MEI - IMPORT','MEI - IT','MEI - LEGAL','MEI - PROGRAM & REFUND','MEI - PUSAT','MEI - REALME FINANCE','MEI - REALME INVENTORY CONTROL','MEI - REALME PUSAT','MEI - SUPPLY CHAIN','MEI - TELEMARKETING','MEI - TRENLY PUSAT','MEI - UMUM','MER - JAKARTA','WEIS - ACCOUNTING','WEIS - OPERASIONAL']
+
+        Depo = ['MEI - DEPO BANDUNG','MEI - DEPO REALME AMBON','MEI - DEPO REALME BALIKPAPAN','MEI - DEPO REALME BANJARMASIN','MEI - DEPO REALME BENGKULU','MEI - DEPO REALME JAMBI','MEI - DEPO REALME JAYAPURA','MEI - DEPO REALME KALIMANTAN','MEI - DEPO REALME KENDARI','MEI - DEPO REALME MAKASSAR','MEI - DEPO REALME MANADO','MEI - DEPO REALME PALANGKARAYA','MEI - DEPO REALME PALEMBANG','MEI - DEPO REALME PALU','MEI - DEPO REALME PARE-PARE','MEI - DEPO REALME PONTIANAK','MEI - DEPO REALME SAMARINDA','MEI - DEPO REALME SAMPIT','MEI - DEPO REALME SORONG','MEI - DEPO REALME TARAKAN','MEI - DEPO REALME TERNATE','MEI - DEPO SEMARANG','MEI - DEPO SURABAYA','MEI - DEPO YOGYA']
+
+        Trenly = ['MEI - TRENLY','MEI - TRENLY AREN JAYA','MEI - TRENLY BOJONG GEDE','MEI - TRENLY CIDODOL','MEI - TRENLY CILODONG','MEI - TRENLY CITAYAM','MEI - TRENLY GUDANG','MEI - TRENLY HARAPAN JAYA','MEI - TRENLY JATIBENING','MEI - TRENLY KARAWACI','MEI - TRENLY KARAWANG','MEI - TRENLY KEDOYA','MEI - TRENLY KELAPA DUA','MEI - TRENLY MENCENG','MEI - TRENLY MUNJUL','MEI - TRENLY MUSTAFA','MEI - TRENLY PAMULANG','MEI - TRENLY PATRIOT','MEI - TRENLY PONDOK AREN','MEI - TRENLY PONDOK UNGU','MEI - TRENLY PORIS','MEI - TRENLY PURWAKARTA','MEI - TRENLY PUSAT','MEI - TRENLY SENTOSA','MEI - TRENLY TAPOS','MEI - TRENLY WARAKAS']
+
+
+
         # read by default 1st sheet of an excel file
         dataframe1 = pd.read_excel(file_path, sheet_name=0, header=None)
         lembur = []
         lembur2 = []
-        
         for row in range(1, len(dataframe1)):
             Employee_ID = dataframe1.iloc[row, 0]
-            Full_Name = dataframe1.iloc[row, 1]
+            Full_Name = str(dataframe1.iloc[row, 1]).replace("NaT", "").replace("nan", "").replace("None", "").strip()
             Branch = dataframe1.iloc[row, 2]
             Organization = dataframe1.iloc[row, 3]
             Job_Position = dataframe1.iloc[row, 4]
@@ -1971,14 +1978,26 @@ def importAbsensi():
             Check_Out = str(dataframe1.iloc[row, 11]).replace("NaT", "00:00").replace("nan", "00:00").replace("None", "00:00").strip()
             Late_In = str(dataframe1.iloc[row, 12]).replace("NaT", "00:00").replace("nan", "00:00").replace("None", "00:00").strip()
 
+            if Full_Name == "":
+                continue  # skip header row if present
+            
+            rules = ""
+            if Organization in OfficeMei:
+                rules = "OfficeMeiRules"
+            elif Organization in Depo:
+                rules = "DepoRules"
+            elif Organization in Trenly:
+                rules = "TrenlyRules"
+            else:
+                continue
+
+
             Schedule_Check_In_time = datetime.strptime(Schedule_Check_In, "%H:%M").time() if Schedule_Check_In and Schedule_Check_In != "00:00" else False
             Schedule_Check_Out_time = datetime.strptime(Schedule_Check_Out, "%H:%M").time() if Schedule_Check_Out and Schedule_Check_Out != "00:00" else False
             Check_In = datetime.strptime(Check_In, "%H:%M").time() if Check_In and Check_In != "00:00" else False
             Check_Out = datetime.strptime(Check_Out, "%H:%M").time() if Check_Out and Check_Out != "00:00" else False
             Late_In = datetime.strptime(Late_In, "%H:%M").time() if Late_In and Late_In != "00:00" else False
 
-            if str(dataframe1.iloc[row,1]) == "":
-                continue  # skip header row if present
             # if Job_Position.lower() == "e-commerce operation":
             #     import ipdb; ipdb.set_trace()
 
@@ -1986,9 +2005,9 @@ def importAbsensi():
                 continue
 
 
-            print(f'Processing Data Line {row} - {Employee_ID} on Date {Date}..., cek {datetime.strptime(Schedule_Check_Out, "%H:%M").time()} ### {Check_In}-{Check_Out} {Job_Position}', end='\r', flush=True)
+            print(f'Processing Data {Employee_ID} on Date {Date}, {Job_Position}', end='\r', flush=True)
 
-            # if row >= 7560:
+            # if row >= 12607:
             #     import ipdb; ipdb.set_trace()
 
             late_deduction = 0
@@ -2003,7 +2022,7 @@ def importAbsensi():
                 if "trenly gudang" in Organization.lower():
                     meal_allowance = 17000  # default uang makan untuk trenly gudang
 
-                print(datetime.strptime(Date, "%Y-%m-%d").date().strftime("%A"))
+                # print(datetime.strptime(Date, "%Y-%m-%d").date().strftime("%A"))
                 if datetime.strptime(Date, "%Y-%m-%d").date().strftime("%A") not in ["Saturday", "Sunday"] and Schedule_Check_In_time and Check_Out:
                     start_over_time = datetime.combine(date.today(), Schedule_Check_Out_time) + timedelta(hours=1)  # lembur mulai dihitung 1 jam setelah jam pulang
                     t1 = start_over_time
@@ -2019,7 +2038,7 @@ def importAbsensi():
                 else:
                     if not Check_In or not Check_Out:
                         continue
-                    print(Full_Name)
+                    # print(Full_Name)
                     # if Check_In and Check_Out:
                     t1 = datetime.combine(date.today(), Check_In)
                     t2 = datetime.combine(date.today(), Check_Out)
