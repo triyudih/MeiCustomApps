@@ -45,9 +45,10 @@ database = 'MITO2024' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
 # 2025-11-19 - add create product iseller
 # 2025-11-21 - update based query to master product to include len(field1) > 11 # product maju
 # 2025-12-05 - update datetime.datetime to datetime
+# 2025-12-22 - Update new import absensi HRD
 
 global Version
-Version = "251205"
+Version = "251222"
 
 print(f'Connect to {database[:3]}...')
 conn = pymssql.connect(server=server, port=port, user=user, password=password, database=database,autocommit=False)
