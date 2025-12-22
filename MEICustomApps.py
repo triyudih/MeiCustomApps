@@ -1386,7 +1386,7 @@ def updateProductIseller():
         return
     
     json_data = json.loads(response.text)
-    # json_data = {'products': [{'product_id': 'db1fbd7c-9c04-4e59-aa94-4150a882bc6b', 'product_header_id': 'b8efffd4-bc4e-4510-aa6c-5df03a732af5', 'sku': '8997017642151-TESTER', 'error_message': None, 'is_success': True}, {'product_id': '6fd2d298-cd68-4b1c-8e7a-f7bb8ba70f0c', 'product_header_id': '118c768b-1128-4254-b829-618d55dbe3ef', 'sku': '8997017642168-TESTER', 'error_message': None, 'is_success': True}], 'error_message': None, 'status': True, 'time': '00:00:00.2968739', 'error_detail': None}
+    # json_data = {'products': [{'product_id': 'db1fbd7c-9c04-4e59-aa94-4150a882bc6b', 'product_header_id': 'b8efffd4-bc4e-4510-aa6c-5df03a732af5', 'sku': '8997017642151-TESTER', 'error_message': None, 'is_success': True}, {'product_id': '6fd2d298-cd68-4b1c-8e7a-f7bb8ba70f0c', 'product_header_id': '118c768b-1128-4254-b829-618d55dbe3ef', 'sku': '8997017642168-TESTER', 'error_message': None, 'is_success': True}], 'error_message': None, 'status': True, 'time': '99:99:00.2968739', 'error_detail': None}
 
     print(json_data)
     print(Fore.LIGHTGREEN_EX +"Product updated successfully.")
@@ -1513,6 +1513,10 @@ def createPromoNonTrigger():
                 "priority": priority,
                 "allow_multiply": "true",
                 # "is_active": "false"
+                # "customer_eligibility": "customer_groups",
+                # "apply_to": [
+                #     "testing"
+                # ],
             }
             if not trigger:
                 product_tmpl_iseller.update({
@@ -1577,7 +1581,7 @@ def createPromoNonTrigger():
         # header
         headers = ["Promotion ID", "Title", "Active", "Error Message", "Success"]
 
-        #### {'promotions': [{'promotion_id': 'a6b7cd7b-8579-49b3-bf2f-aae00953c59e', 'promotion_title': 'PROMO MEDAN 30%', 'is_active': True, 'error_message': None, 'is_success': True}, {'promotion_id': '781f1ed8-72fe-47f4-bcd5-3c2ed09a756c', 'promotion_title': 'PROMO MEDAN 30%', 'is_active': True, 'error_message': None, 'is_success': True}], 'error_message': None, 'status': True, 'time': '00:00:00.1250026', 'error_detail': None}
+        #### {'promotions': [{'promotion_id': 'a6b7cd7b-8579-49b3-bf2f-aae00953c59e', 'promotion_title': 'PROMO MEDAN 30%', 'is_active': True, 'error_message': None, 'is_success': True}, {'promotion_id': '781f1ed8-72fe-47f4-bcd5-3c2ed09a756c', 'promotion_title': 'PROMO MEDAN 30%', 'is_active': True, 'error_message': None, 'is_success': True}], 'error_message': None, 'status': True, 'time': '99:99:00.1250026', 'error_detail': None}
         error_message = json_data.get('error_message')
         status = json_data.get('status')
         if status and not error_message:
@@ -1925,7 +1929,7 @@ def refreshIsellerToken():
     input(Fore.LIGHTGREEN_EX +"Press Enter to continue...")
     main()
 
-def importAbsensi():
+def importAbsensi_old():
     # if not UserLogin:
     #     print(Fore.RED +"❌ User not logged in.\n")
     #     main()
@@ -1934,7 +1938,7 @@ def importAbsensi():
     if UserLogin == 'usermaju':
         while True:
             fname = input(Fore.LIGHTGREEN_EX +"Enter the Excel file name for Absensi: ")
-            fname = "ABSEN MAJU NOV.xlsx"
+            # fname = "ABSEN MAJU NOV.xlsx"
             # if not fname.endswith('.xlsx'):
             #     fname += '.xlsx'
             file_path = os.path.join("Import", fname)   # otomatis bikin path Import/fname
@@ -1948,9 +1952,6 @@ def importAbsensi():
             else:
                 break
         
-        xlsx_data_header = "Employee ID;Full Name;Branch;Organization;Job Position;Date;Shift;Schedule Check In;Schedule Check Out;Attendance Code;Check In;Check Out;Late In"
-        xlsx_data_detail = "MEI05297;GHILLBERTH ROXANE SUILA;PT Maju Express Indonesia - REALME;MEI - DEPO REALME AMBON;ADMIN;2025-10-27;R New;10:00;18:00;H;10:18;18:01;00:18"
-
         OfficeMei = ['MEI - ACCOUNTING','MEI - AUDIT','MEI - FINANCE','MEI - GA','MEI - GUDANG','MEI - HRD','MEI - IMPORT','MEI - IT','MEI - LEGAL','MEI - PROGRAM & REFUND','MEI - PUSAT','MEI - REALME FINANCE','MEI - REALME INVENTORY CONTROL','MEI - REALME PUSAT','MEI - SUPPLY CHAIN','MEI - TELEMARKETING','MEI - TRENLY PUSAT','MEI - UMUM','MER - JAKARTA','WEIS - ACCOUNTING','WEIS - OPERASIONAL']
 
         Depo = ['MEI - DEPO BANDUNG','MEI - DEPO REALME AMBON','MEI - DEPO REALME BALIKPAPAN','MEI - DEPO REALME BANJARMASIN','MEI - DEPO REALME BENGKULU','MEI - DEPO REALME JAMBI','MEI - DEPO REALME JAYAPURA','MEI - DEPO REALME KALIMANTAN','MEI - DEPO REALME KENDARI','MEI - DEPO REALME MAKASSAR','MEI - DEPO REALME MANADO','MEI - DEPO REALME PALANGKARAYA','MEI - DEPO REALME PALEMBANG','MEI - DEPO REALME PALU','MEI - DEPO REALME PARE-PARE','MEI - DEPO REALME PONTIANAK','MEI - DEPO REALME SAMARINDA','MEI - DEPO REALME SAMPIT','MEI - DEPO REALME SORONG','MEI - DEPO REALME TARAKAN','MEI - DEPO REALME TERNATE','MEI - DEPO SEMARANG','MEI - DEPO SURABAYA','MEI - DEPO YOGYA']
@@ -1974,9 +1975,9 @@ def importAbsensi():
             Schedule_Check_In = dataframe1.iloc[row, 7]
             Schedule_Check_Out = dataframe1.iloc[row, 8]
             Attendance_Code = dataframe1.iloc[row, 9]
-            Check_In = str(dataframe1.iloc[row, 10]).replace("NaT", "00:00").replace("nan", "00:00").replace("None", "00:00").strip()
-            Check_Out = str(dataframe1.iloc[row, 11]).replace("NaT", "00:00").replace("nan", "00:00").replace("None", "00:00").strip()
-            Late_In = str(dataframe1.iloc[row, 12]).replace("NaT", "00:00").replace("nan", "00:00").replace("None", "00:00").strip()
+            Check_In = str(dataframe1.iloc[row, 10]).replace("NaT", "99:99").replace("nan", "99:99").replace("None", "99:99").strip()
+            Check_Out = str(dataframe1.iloc[row, 11]).replace("NaT", "99:99").replace("nan", "99:99").replace("None", "99:99").strip()
+            Late_In = str(dataframe1.iloc[row, 12]).replace("NaT", "99:99").replace("nan", "99:99").replace("None", "99:99").strip()
 
             if Full_Name == "":
                 continue  # skip header row if present
@@ -1992,11 +1993,11 @@ def importAbsensi():
                 continue
 
 
-            Schedule_Check_In_time = datetime.strptime(Schedule_Check_In, "%H:%M").time() if Schedule_Check_In and Schedule_Check_In != "00:00" else False
-            Schedule_Check_Out_time = datetime.strptime(Schedule_Check_Out, "%H:%M").time() if Schedule_Check_Out and Schedule_Check_Out != "00:00" else False
-            Check_In = datetime.strptime(Check_In, "%H:%M").time() if Check_In and Check_In != "00:00" else False
-            Check_Out = datetime.strptime(Check_Out, "%H:%M").time() if Check_Out and Check_Out != "00:00" else False
-            Late_In = datetime.strptime(Late_In, "%H:%M").time() if Late_In and Late_In != "00:00" else False
+            Schedule_Check_In_time = datetime.strptime(Schedule_Check_In, "%H:%M").time() if Schedule_Check_In and Schedule_Check_In != "99:99" else False
+            Schedule_Check_Out_time = datetime.strptime(Schedule_Check_Out, "%H:%M").time() if Schedule_Check_Out and Schedule_Check_Out != "99:99" else False
+            Check_In = datetime.strptime(Check_In, "%H:%M").time() if Check_In and Check_In != "99:99" else False
+            Check_Out = datetime.strptime(Check_Out, "%H:%M").time() if Check_Out and Check_Out != "99:99" else False
+            Late_In = datetime.strptime(Late_In, "%H:%M").time() if Late_In and Late_In != "99:99" else False
 
             # if Job_Position.lower() == "e-commerce operation":
             #     import ipdb; ipdb.set_trace()
@@ -2066,7 +2067,7 @@ def importAbsensi():
                 
 
 
-            # if Check_Out and Check_Out != "00:00" and Check_In and Check_In != "00:00":
+            # if Check_Out and Check_Out != "99:99" and Check_In and Check_In != "99:99":
             #     jml_amt = 0
             #     if datetime.strptime(Date, "%Y-%m-%d").date().strftime("%A") == "Saturday":  # Saturday
             #         t1 = datetime.combine(date.today(), Schedule_Check_Out_time)
@@ -2208,6 +2209,273 @@ def importAbsensi():
             #             dt2 = datetime.combine(date.today(), jam_out)
             #             durasi = dt2 - dt1
             #             jml_amt = int((durasi.total_seconds() / 60) / 30) * 10000    # durasi dihitung setiap 30 menit = 15000
+
+
+def importAbsensi():
+    # if not UserLogin:
+    #     print(Fore.RED +"❌ User not logged in.\n")
+    #     main()
+    #     return True
+    UserLogin = "usermaju"  # temp hardcode dulu
+    if UserLogin == 'usermaju':
+        while True:
+            fname = input(Fore.LIGHTGREEN_EX +"Enter the Excel file name for Absensi: ")
+            # fname = "ABSEN MAJU NOV.xlsx"
+            # if not fname.endswith('.xlsx'):
+            #     fname += '.xlsx'
+            file_path = os.path.join("Import", fname)   # otomatis bikin path Import/fname
+            if not os.path.exists(file_path):
+                print(Fore.RED +"❌ File not found.\n")
+                lagi = input(Fore.LIGHTGREEN_EX +"Try again? (y/n): ").lower()
+                if lagi == 'y':
+                    continue
+                else:
+                    main()
+                    
+            else:
+                break
+
+        OfficeMei = ['MEI - ACCOUNTING','MEI - AUDIT','MEI - FINANCE','MEI - GA','MEI - GUDANG','MEI - HRD','MEI - IMPORT','MEI - IT','MEI - LEGAL','MEI - PROGRAM & REFUND','MEI - PUSAT','MEI - REALME FINANCE','MEI - REALME INVENTORY CONTROL','MEI - REALME PUSAT','MEI - SUPPLY CHAIN','MEI - TELEMARKETING','MEI - TRENLY PUSAT','MEI - UMUM','MER - JAKARTA','WEIS - ACCOUNTING','WEIS - OPERASIONAL']
+
+        Depo = ['MEI - DEPO BANDUNG','MEI - DEPO REALME AMBON','MEI - DEPO REALME BALIKPAPAN','MEI - DEPO REALME BANJARMASIN','MEI - DEPO REALME BENGKULU','MEI - DEPO REALME JAMBI','MEI - DEPO REALME JAYAPURA','MEI - DEPO REALME KALIMANTAN','MEI - DEPO REALME KENDARI','MEI - DEPO REALME MAKASSAR','MEI - DEPO REALME MANADO','MEI - DEPO REALME PALANGKARAYA','MEI - DEPO REALME PALEMBANG','MEI - DEPO REALME PALU','MEI - DEPO REALME PARE-PARE','MEI - DEPO REALME PONTIANAK','MEI - DEPO REALME SAMARINDA','MEI - DEPO REALME SAMPIT','MEI - DEPO REALME SORONG','MEI - DEPO REALME TARAKAN','MEI - DEPO REALME TERNATE','MEI - DEPO SEMARANG','MEI - DEPO SURABAYA','MEI - DEPO YOGYA']
+
+        Trenly = ['MEI - TRENLY GUDANG']
+
+
+
+        # read by default 1st sheet of an excel file
+        dataframe1 = pd.read_excel(file_path, sheet_name=0, header=None)
+        lembur = []
+        lembur2 = []
+        for row in range(1, len(dataframe1)):
+            Employee_ID = dataframe1.iloc[row, 0]
+            Full_Name = str(dataframe1.iloc[row, 1]).replace("NaT", "").replace("nan", "").replace("None", "").strip()
+            Branch = dataframe1.iloc[row, 2]
+            Organization = dataframe1.iloc[row, 3]
+            Job_Position = dataframe1.iloc[row, 4]
+            Date = dataframe1.iloc[row, 5]
+            Shift = dataframe1.iloc[row, 6]
+            Schedule_Check_In = dataframe1.iloc[row, 7]
+            Schedule_Check_Out = dataframe1.iloc[row, 8]
+            Attendance_Code = dataframe1.iloc[row, 9]
+            Check_In = str(dataframe1.iloc[row, 10]).replace("NaT", "99:99").replace("nan", "99:99").replace("None", "99:99").strip()
+            Check_Out = str(dataframe1.iloc[row, 11]).replace("NaT", "99:99").replace("nan", "99:99").replace("None", "99:99").strip()
+            Late_In = str(dataframe1.iloc[row, 12]).replace("NaT", "99:99").replace("nan", "99:99").replace("None", "99:99").strip()
+
+            if Full_Name == "":
+                continue  # skip header row if present
+            
+            rules = ""
+            jam_makan = False
+            meal_allowance = 0
+            max_overtime = 0
+            overtime_per30mins = 10000
+            clockOut_Saturday = False
+            if Organization in OfficeMei:
+                rules = "OfficeMeiRules"
+                clockIn = datetime.strptime("08:30", "%H:%M").time()
+                clockOut = datetime.strptime("17:30", "%H:%M").time()
+                jam_makan = datetime.strptime("20:00", "%H:%M").time() 
+                meal_allowance = 15000
+                if Organization in ["MEI - GUDANG","MER - JAKARTA"]:
+                    if Job_Position == "GUDANG":
+                        clockIn = datetime.strptime("09:30", "%H:%M").time()
+                        clockOut = datetime.strptime("19:00", "%H:%M").time()
+                        jam_makan = datetime.strptime("21:00", "%H:%M").time() 
+                        meal_allowance = 17000
+
+                if Organization in ['MEI - FINANCE','MEI - REALME FINANCE']:
+                    max_overtime_weekend = 250000
+
+            elif Organization in Depo:
+                rules = "DepoRules"
+                clockIn = datetime.strptime("10:00", "%H:%M").time()
+                clockOut = datetime.strptime("18:00", "%H:%M").time()
+                clockOut_Saturday = datetime.strptime("15:00", "%H:%M").time() if datetime.strptime(str(Date)[:10], "%Y-%m-%d").date().strftime("%A") in ["Saturday"] else False
+                meal_allowance = 0
+                max_overtime = 60000
+
+            elif Organization in Trenly:
+                rules = "TrenlyRules"
+                meal_allowance = 0
+                max_overtime = 0
+                if Organization == "MEI - TRENLY GUDANG":
+                    meal_allowance = 17000
+                    max_overtime = 0
+            else:
+                continue
+
+            Check_In = datetime.strptime(Check_In, "%H:%M").time() if Check_In and Check_In != "99:99" else False
+            Check_Out = datetime.strptime(Check_Out, "%H:%M").time() if Check_Out and Check_Out != "99:99" else False
+            Late_In = datetime.strptime(Late_In, "%H:%M").time() if Late_In and Late_In != "99:99" else False
+
+            if Job_Position.lower().strip() in ["direktur","manager","marketing manager","sales marketing","e-commerce operation","e-commerce specialist","asm","graphic design","host live streaming","staff toko"]:
+                continue
+
+            print(f'Processing Data {Employee_ID} on Date {Date}, {Job_Position}, {row}', end='\r', flush=True)
+
+            late_deduction = 0
+            jml_amt = 0
+            if datetime.strptime(str(Date)[:10], "%Y-%m-%d").date().strftime("%A") not in ["Saturday", "Sunday"]:
+                ####### HARI KERJA SENIN SAMPAI JUM'AT ########
+                if Check_Out:
+                    start_over_time = datetime.combine(date.today(), clockOut) + timedelta(hours=1) if rules !='DepoRules' else datetime.combine(date.today(), clockOut) + timedelta(hours=2) # lembur mulai dihitung 1 jam setelah jam pulang
+                    t1 = start_over_time
+                    t2 = datetime.combine(date.today(), Check_Out)
+                    if Check_Out <= clockIn:
+                        checkout_date = date.today() + timedelta(days=1)
+                        t2 = datetime.combine(checkout_date, Check_Out)
+
+                    if t2 >= t1:
+                        jml_amt = int((t2 - t1).total_seconds() / 60 / 30) * overtime_per30mins  # durasi dihitung setiap 30 menit = 10000
+                        jam_makan = Check_Out >= jam_makan if Organization not in Depo or Organization in Trenly else False # makan malam jika pulang lewat jam 8 malam
+                        meal_allowance = meal_allowance if jam_makan else 0
+                        jml_amt += 20000
+                        # if jml_amt > max_overtime and rules == "MEI - GUDANG":
+                        #     jml_amt = max_overtime
+                    else:
+                        jml_amt = 0
+                        meal_allowance = 0
+                else:
+                    jml_amt = 0
+                    meal_allowance = 0
+
+            else:
+            # elif datetime.strptime(str(Date)[:10], "%Y-%m-%d").date().strftime("%A") in ["Saturday"]:
+                ####### SABTU DAN MINGGU ########
+                # import ipdb; ipdb.set_trace()
+                if not Check_In or not Check_Out and rules != "DepoRules":
+                    continue
+                
+                if Organization in ['MEI - FINANCE','MEI - REALME FINANCE']:
+                    if Check_In and Check_Out:
+                        jml_amt = max_overtime_weekend
+                        meal_allowance = 0
+                    else:
+                        jml_amt = 0
+                        meal_allowance = 0
+                else:
+                # print(Full_Name)
+                # if Check_In and Check_Out:
+                    if Check_Out:
+                        t1 = datetime.combine(date.today(), Check_In) if rules != "DepoRules" else datetime.combine(date.today(), clockOut)
+                        if clockOut_Saturday:
+                            t1 = datetime.combine(date.today(), clockOut_Saturday)
+                        t2 = datetime.combine(date.today(), Check_Out)
+                        if t2 >= t1:
+                            jml_amt = int((t2 - t1).total_seconds() / 60 / 30) * overtime_per30mins  # durasi dihitung setiap 30 menit = 10000
+                            meal_allowance = 0   # makan malam jika pulang lewat jam 8 malam
+                            jml_amt += 20000
+                            if rules == "DepoRules":
+                                if jml_amt > max_overtime and clockOut_Saturday :
+                                    jml_amt = max_overtime
+                                # else:
+                        else:
+                            jml_amt = 0
+                            meal_allowance = 0
+                # else:
+                #     jml_amt = 0
+                #     meal_allowance = 0
+            # else:
+            #     ###########3 HARI MINGGU ##############
+            #     print(Full_Name)
+            if datetime.strptime(str(Date)[:10], "%Y-%m-%d").date().strftime("%A") not in ["Saturday", "Sunday"] and Check_In and Check_In >= clockIn:
+                jml_late = datetime.combine(date.today(), Check_In) - datetime.combine(date.today(), clockIn)
+                late_minutes = int(jml_late.total_seconds() / 60)
+                if late_minutes > 60:
+                    late_deduction = 40000 if Organization in Depo else 50000
+                elif late_minutes > 30:
+                    late_deduction = 25000 if Organization in Depo else 35000
+                elif late_minutes > 15:
+                    late_deduction = 15000 if Organization in Depo else 25000
+                else:
+                    late_deduction = 0
+            
+            day_en = datetime.strptime(str(Date)[:10], "%Y-%m-%d").date().strftime("%A")
+            day_id = {
+                'Monday': 'Senin',
+                'Tuesday': 'Selasa',
+                'Wednesday': 'Rabu',
+                'Thursday': 'Kamis',
+                'Friday': 'Jumat',
+                'Saturday': 'Sabtu',    
+                'Sunday': 'Minggu'
+            }
+
+            if jml_amt > 0 or late_deduction > 0:
+                lembur.append({
+                    "EmployeeID": Employee_ID,
+                    "FullName": Full_Name,
+                    "Organization": Organization,
+                    "JobPosition": Job_Position,
+                    "Date": Date,
+                    "Day": day_id[day_en],
+                    "CheckIn": Check_In,
+                    "CheckOut": Check_Out,
+                    "OverTimeAmount": jml_amt,
+                    "MealAllowance": meal_allowance,
+                    "LateDeductions": late_deduction,
+                })
+                # print('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+            # else:
+            #     continue  # skip if no Check Out
+
+        if lembur:
+            df = pd.DataFrame(lembur)
+            summary_df = df.groupby(['EmployeeID', 'FullName'])[[
+                'OverTimeAmount', 
+                'MealAllowance', 
+                'LateDeductions'
+            ]].sum().reset_index()
+
+            summary_df.rename(columns={
+                'OverTimeAmount': 'TotalAmount',
+                'MealAllowance': 'totalMeal',
+                'LateDeductions': 'lateDeduction'
+            }, inplace=True)
+            lembur2 = summary_df.to_dict('records')
+
+            print(tabulate(lembur, headers="keys", tablefmt="grid"))
+            print('#######################################')
+            print(tabulate(lembur2, headers="keys", tablefmt="grid"))
+            quest = input(Fore.LIGHTGREEN_EX +"Are you want to export the query results to a XLSX file? (y/n): ").lower()
+            if quest != 'y':
+                input(Fore.LIGHTGREEN_EX +"Press Enter to continue...")
+                clear()
+                main()
+                # return True
+            # simpan ke XLSX
+            filename = input(Fore.LIGHTGREEN_EX +"Enter the output XLSX file name: ")
+            if not filename.endswith('.xlsx'):
+                filename += '.xlsx'
+            output_path = os.path.join("Export", filename)
+
+            df_detail = pd.DataFrame(lembur)   # Data detail
+            df_rekap  = pd.DataFrame(lembur2)  # Data summary yang baru dibuat
+            with pd.ExcelWriter(output_path) as writer:
+                # Tulis sheet pertama
+                df_detail.to_excel(writer, sheet_name='Detail Lembur', index=False)
+                # Tulis sheet kedua
+                df_rekap.to_excel(writer, sheet_name='Summary Total', index=False)
+
+
+            print(f"Data has been exported to Folder Export/{filename}")
+            input(Fore.LIGHTGREEN_EX +"Press Enter to continue...")
+            clear()
+            main()
+
+        if not lembur:
+            print(Fore.RED +"❌ The file has no over time.\n")
+            input(Fore.LIGHTGREEN_EX +"Press Enter to continue...")
+            main()
+            # return True
+
+    else:
+        print(Fore.RED +"❌ You are not allowed to import Absensi.\n")
+        input(Fore.LIGHTGREEN_EX +"Press Enter to continue...")
+        main()
+        # return True
+
 
 def cek_user():
     clear()
