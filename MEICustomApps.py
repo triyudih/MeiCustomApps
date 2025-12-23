@@ -34,7 +34,7 @@ port = 1433
 user = 'useresb'
 password = 'mitoeasybuser201612'
 database = 'dummy_easyb' #'dummy_easyb' # 'dummy_easyb_live' # 'dummy_easyb_vnc' #
-database = 'MITO2024' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
+database = 'MAJU' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
 
 ##### REAMRRKKKKS:
 # update createProductTrannsfer function to set CreateBy and EditBy to UserLogin include GDV
@@ -46,9 +46,10 @@ database = 'MITO2024' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
 # 2025-11-21 - update based query to master product to include len(field1) > 11 # product maju
 # 2025-12-05 - update datetime.datetime to datetime
 # 2025-12-22 - Update new import absensi HRD
+# 2025-12-23 - Update fixing trenly rules and += 20000
 
 global Version
-Version = "251222"
+Version = "251223"
 
 print(f'Connect to {database[:3]}...')
 conn = pymssql.connect(server=server, port=port, user=user, password=password, database=database,autocommit=False)
@@ -2001,7 +2002,6 @@ def importAbsensi_old():
             Late_In = datetime.strptime(Late_In, "%H:%M").time() if Late_In and Late_In != "99:99" else False
 
             # if Job_Position.lower() == "e-commerce operation":
-            #     import ipdb; ipdb.set_trace()
 
             if Job_Position.lower().strip() in ["direktur","manager","marketing manager","sales marketing","e-commerce operation","e-commerce specialist"]:
                 continue
@@ -2010,7 +2010,6 @@ def importAbsensi_old():
             print(f'Processing Data {Employee_ID} on Date {Date}, {Job_Position}', end='\r', flush=True)
 
             # if row >= 12607:
-            #     import ipdb; ipdb.set_trace()
 
             late_deduction = 0
             jml_amt = 0
@@ -2018,7 +2017,6 @@ def importAbsensi_old():
                 #### ketentuan ########
                 # if row >= 12184:
                 #     print("###############", Schedule_Check_Out_time)
-                #     import ipdb; ipdb.set_trace()
 
                 meal_allowance = 15000  # default uang makan
                 if "trenly gudang" in Organization.lower():
@@ -2298,7 +2296,10 @@ def importAbsensi():
 
             elif Organization in Trenly:
                 rules = "TrenlyRules"
-                meal_allowance = 0
+                clockIn = datetime.strptime("08:30", "%H:%M").time()
+                clockOut = datetime.strptime("17:30", "%H:%M").time()
+                jam_makan = datetime.strptime("20:00", "%H:%M").time() 
+                meal_allowance = 15000
                 max_overtime = 0
                 if Organization == "MEI - TRENLY GUDANG":
                     meal_allowance = 17000
@@ -2313,7 +2314,7 @@ def importAbsensi():
             if Job_Position.lower().strip() in ["direktur","manager","marketing manager","sales marketing","e-commerce operation","e-commerce specialist","asm","graphic design","host live streaming","staff toko"]:
                 continue
 
-            print(f'Processing Data {Employee_ID} on Date {Date}, {Job_Position}, {row}', end='\r', flush=True)
+            print(f'Processing Data {Employee_ID} on Date {Date}, {Job_Position}, {row}')#, end='\r', flush=True)
 
             late_deduction = 0
             jml_amt = 0
@@ -2344,7 +2345,6 @@ def importAbsensi():
             else:
             # elif datetime.strptime(str(Date)[:10], "%Y-%m-%d").date().strftime("%A") in ["Saturday"]:
                 ####### SABTU DAN MINGGU ########
-                # import ipdb; ipdb.set_trace()
                 if not Check_In or not Check_Out and rules != "DepoRules":
                     continue
                 
@@ -2366,8 +2366,8 @@ def importAbsensi():
                         if t2 >= t1:
                             jml_amt = int((t2 - t1).total_seconds() / 60 / 30) * overtime_per30mins  # durasi dihitung setiap 30 menit = 10000
                             meal_allowance = 0   # makan malam jika pulang lewat jam 8 malam
-                            jml_amt += 20000
                             if rules == "DepoRules":
+                                jml_amt += 20000
                                 if jml_amt > max_overtime and clockOut_Saturday :
                                     jml_amt = max_overtime
                                 # else:
