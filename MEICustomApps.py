@@ -34,7 +34,7 @@ port = 1433
 user = 'useresb'
 password = 'mitoeasybuser201612'
 database = 'dummy_easyb' #'dummy_easyb' # 'dummy_easyb_live' # 'dummy_easyb_vnc' #
-database = 'MAJU' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
+database = 'MITO2024' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
 
 ##### REAMRRKKKKS:
 # update createProductTrannsfer function to set CreateBy and EditBy to UserLogin include GDV
@@ -49,7 +49,7 @@ database = 'MAJU' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
 # 2025-12-23 - Update fixing trenly rules and += 20000
 
 global Version
-Version = "251223"
+Version = "251205"
 
 print(f'Connect to {database[:3]}...')
 conn = pymssql.connect(server=server, port=port, user=user, password=password, database=database,autocommit=False)
@@ -2270,18 +2270,19 @@ def importAbsensi():
             max_overtime = 0
             overtime_per30mins = 10000
             clockOut_Saturday = False
+            nextDate = False
             if Organization in OfficeMei:
                 rules = "OfficeMeiRules"
                 clockIn = datetime.strptime("08:30", "%H:%M").time()
                 clockOut = datetime.strptime("17:30", "%H:%M").time()
                 jam_makan = datetime.strptime("20:00", "%H:%M").time() 
                 meal_allowance = 15000
-                if Organization in ["MEI - GUDANG","MER - JAKARTA"]:
-                    if Job_Position == "GUDANG":
-                        clockIn = datetime.strptime("09:30", "%H:%M").time()
-                        clockOut = datetime.strptime("19:00", "%H:%M").time()
-                        jam_makan = datetime.strptime("21:00", "%H:%M").time() 
-                        meal_allowance = 17000
+                if Organization in ["MEI - GUDANG","MER - JAKARTA"]:  ## MER JAKARATA SKIP DULU
+                    # if Job_Position in ["GUDANG","OPERASIONAL"]:
+                    clockIn = datetime.strptime("09:30", "%H:%M").time()
+                    clockOut = datetime.strptime("19:00", "%H:%M").time()
+                    jam_makan = datetime.strptime("21:00", "%H:%M").time() 
+                    meal_allowance = 17000
 
                 if Organization in ['MEI - FINANCE','MEI - REALME FINANCE']:
                     max_overtime_weekend = 250000
@@ -2327,11 +2328,12 @@ def importAbsensi():
                     if Check_Out <= clockIn:
                         checkout_date = date.today() + timedelta(days=1)
                         t2 = datetime.combine(checkout_date, Check_Out)
+                        nextDate = True
 
                     if t2 >= t1:
                         jml_amt = int((t2 - t1).total_seconds() / 60 / 30) * overtime_per30mins  # durasi dihitung setiap 30 menit = 10000
                         jam_makan = Check_Out >= jam_makan if Organization not in Depo or Organization in Trenly else False # makan malam jika pulang lewat jam 8 malam
-                        meal_allowance = meal_allowance if jam_makan else 0
+                        meal_allowance = meal_allowance if jam_makan or nextDate else 0
                         jml_amt += 20000
                         # if jml_amt > max_overtime and rules == "MEI - GUDANG":
                         #     jml_amt = max_overtime
@@ -2363,6 +2365,10 @@ def importAbsensi():
                         if clockOut_Saturday:
                             t1 = datetime.combine(date.today(), clockOut_Saturday)
                         t2 = datetime.combine(date.today(), Check_Out)
+                        if Check_Out <= clockIn:
+                            checkout_date = date.today() + timedelta(days=1)
+                            t2 = datetime.combine(checkout_date, Check_Out)
+                            nextDate = True
                         if t2 >= t1:
                             jml_amt = int((t2 - t1).total_seconds() / 60 / 30) * overtime_per30mins  # durasi dihitung setiap 30 menit = 10000
                             meal_allowance = 0   # makan malam jika pulang lewat jam 8 malam
@@ -2423,13 +2429,14 @@ def importAbsensi():
 
         if lembur:
             df = pd.DataFrame(lembur)
-            summary_df = df.groupby(['EmployeeID', 'FullName'])[[
+            summary_df = df.groupby(['EmployeeID', 'FullName','Organization'])[[
                 'OverTimeAmount', 
                 'MealAllowance', 
                 'LateDeductions'
             ]].sum().reset_index()
 
             summary_df.rename(columns={
+                'Organization': 'Organization',
                 'OverTimeAmount': 'TotalAmount',
                 'MealAllowance': 'totalMeal',
                 'LateDeductions': 'lateDeduction'
