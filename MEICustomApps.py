@@ -47,6 +47,7 @@ database = 'MITO2024' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
 # 2025-12-05 - update datetime.datetime to datetime
 # 2025-12-22 - Update new import absensi HRD
 # 2025-12-23 - Update fixing trenly rules and += 20000
+# 2025-12-31 - Update add new real late time 
 
 global Version
 Version = "251205"
@@ -2265,6 +2266,7 @@ def importAbsensi():
                 continue  # skip header row if present
             
             rules = ""
+            max_real_late_time = datetime.strptime("12:00","%H:%M").time()  ### kalau lewat dari jam 12 siang asumsi salah/lupa clockin
             jam_makan = False
             meal_allowance = 0
             max_overtime = 0
@@ -2315,7 +2317,7 @@ def importAbsensi():
             if Job_Position.lower().strip() in ["direktur","manager","marketing manager","sales marketing","e-commerce operation","e-commerce specialist","asm","graphic design","host live streaming","staff toko"]:
                 continue
 
-            print(f'Processing Data {Employee_ID} on Date {Date}, {Job_Position}, {row}')#, end='\r', flush=True)
+            print(f'Processing Data {Employee_ID} on Date {Date}, {Job_Position}, {row+1}')#, end='\r', flush=True)
 
             late_deduction = 0
             jml_amt = 0
@@ -2389,11 +2391,12 @@ def importAbsensi():
             if datetime.strptime(str(Date)[:10], "%Y-%m-%d").date().strftime("%A") not in ["Saturday", "Sunday"] and Check_In and Check_In >= clockIn:
                 jml_late = datetime.combine(date.today(), Check_In) - datetime.combine(date.today(), clockIn)
                 late_minutes = int(jml_late.total_seconds() / 60)
-                if late_minutes > 60:
+                real_late = Check_In < max_real_late_time
+                if late_minutes > 60 and real_late:
                     late_deduction = 40000 if Organization in Depo else 50000
-                elif late_minutes > 30:
+                elif late_minutes > 30 and real_late:
                     late_deduction = 25000 if Organization in Depo else 35000
-                elif late_minutes > 15:
+                elif late_minutes > 15 and real_late:
                     late_deduction = 15000 if Organization in Depo else 25000
                 else:
                     late_deduction = 0
