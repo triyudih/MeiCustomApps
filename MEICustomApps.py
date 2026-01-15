@@ -48,9 +48,10 @@ database = 'MITO2024' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
 # 2025-12-22 - Update new import absensi HRD
 # 2025-12-23 - Update fixing trenly rules and += 20000
 # 2025-12-31 - Update add new real late time 
+# 2026-01-15 - Update create product iseller
 
 global Version
-Version = "251205"
+Version = "260115"
 
 print(f'Connect to {database[:3]}...')
 conn = pymssql.connect(server=server, port=port, user=user, password=password, database=database,autocommit=False)
@@ -935,7 +936,7 @@ def createNewProduct(import_mode=None):
     })
     print(payload)
     
-    url = "https://trenly.isellershop.com//api/v3/CreateProducts"
+    url = "https://trenly.isellershop.com/api/v3/CreateProducts"
     headers = {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token,
@@ -1201,8 +1202,8 @@ def createNewProductIseller(import_mode=None):
             sku = data[0]
             product_name = data[1] if data[1] else None
             price = data[2] if data[2] else None
-            category = data[2] if data[2] else None
-            category2 = data[4] if data[4] else None
+            category = data[2] if data[2] else None # Select one of the Category (Cashback, Point, Import, Lokal, Tester, Other)
+            category2 = data[4] if data[4] else None # MMI / LOKAL / FASHION / SANDAL SELOP PRIA
 
             sku = str(sku).strip().replace("nan", "") if str(sku) == "nan" else str(sku).strip()
             if not sku:
@@ -1234,8 +1235,8 @@ def createNewProductIseller(import_mode=None):
             sku = input(Fore.LIGHTGREEN_EX +"Enter the Product SKU: ").upper().strip()
             product_name = input(Fore.LIGHTGREEN_EX +"Enter the Product Name: ").upper().strip()
             price = input(Fore.LIGHTGREEN_EX +"Enter the Product Price: ").strip()
-            category = input(Fore.LIGHTGREEN_EX +"Enter the Product Category: ").upper().strip()
-            category2 = input(Fore.LIGHTGREEN_EX +"Enter the Detail Category: ").upper().strip()
+            category = input(Fore.LIGHTGREEN_EX +"Select one of the Category (Cashback, Point, Import, Lokal, Tester, Other) ").upper().strip()
+            category2 = input(Fore.LIGHTGREEN_EX +"Enter the Detail Category (MMI/LOKAL/XXX): ").upper().strip()
             # products = [(sku, product_name, price, stock, category, description)]
 
             if not sku:
@@ -1250,6 +1251,10 @@ def createNewProductIseller(import_mode=None):
 
         item_dict.update({
             'sku': sku,
+            'barcode': sku,
+            'type': 'standard',
+            'taxable': True,
+            'track_inventory': True,
             'continue_selling_when_sold_out': True,
             'is_active': True
         })
@@ -1266,17 +1271,30 @@ def createNewProductIseller(import_mode=None):
         input(Fore.LIGHTGREEN_EX +"Press Enter to continue...")
         main()
 
+    url = "https://trenly.isellershop.com/api/v3/CreateProducts"
+    headers = {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token,
+            'Cookie': '.Stackify.Rum=cafedaed-35f5-4c2d-9712-8cb02bd538a4'
+    }
+
     payload = {
         'products': products
     }
-    print(json.dumps(payload, indent=4))
+    # print(json.dumps(payload, indent=4))
 
-    # url = "https://trenly.isellershop.com//api/v3/CreateProducts"
-    # headers = {
-    #     'Content-Type': 'application/json',
-    #     'Authorization': 'Bearer ' + token,
-    #     'Cookie': '.Stackify.Rum=cafedaed-35f5-4c2d-9712-8cb02bd538a4'
-    # }
+    response = requests.request("POST", url, headers=headers, json=payload)
+    if response.status_code in (495, 496, 525, 526):
+        response = requests.request("POST", url, headers=headers, json=payload, verify=False)
+    if response.status_code != 200:
+        print(Fore.RED +"❌ Failed to update product.\n")
+        input(Fore.LIGHTGREEN_EX +"Press Enter to continue...")
+        return
+    json_data = json.loads(response.text)
+    # json_data = {'products': [{'product_id': 'db1fbd7c-9c04-4e59-aa94-4150a882bc6b', 'product_header_id': 'b8efffd4-bc4e-4510-aa6c-5df03a732af5', 'sku': '8997017642151-TESTER', 'error_message': None, 'is_success': True}, {'product_id': '6fd2d298-cd68-4b1c-8e7a-f7bb8ba70f0c', 'product_header_id': '118c768b-1128-4254-b829-618d55dbe3ef', 'sku': '8997017642168-TESTER', 'error_message': None, 'is_success': True}], 'error_message': None, 'status': True, 'time': '99:99:00.2968739', 'error_detail': None}
+
+    print(json_data ,"\n")
+    input(Fore.LIGHTGREEN_EX +"Press Enter to continue...")
 
 def updateProductIseller():
     getToken = f"""SELECT Token FROM tmp_iseller_token WHERE id= 1 AND Token IS NOT NULL"""
@@ -1351,6 +1369,7 @@ def updateProductIseller():
             sku = input(Fore.LIGHTGREEN_EX +"Enter the Product SKU: ").upper().strip()
             product_name = input(Fore.LIGHTGREEN_EX +"Enter the Product Name: ").strip()
             price = input(Fore.LIGHTGREEN_EX +"Enter the Product Price: ").strip()
+            category2 = input(Fore.LIGHTGREEN_EX +"Enter the Product Category: ").strip()
 
             if not sku:
                 print(Fore.RED +"❌ Product SKU is required.\n")
@@ -1369,10 +1388,12 @@ def updateProductIseller():
                 product_item.update({'name': product_name})
             if price:
                 product_item.update({'price': price})
+            if category2:
+                product_item.update({'product_type': category2})
             break
         products.append(product_item)
 
-    url = "https://trenly.isellershop.com//api/v3/UpdateProducts"
+    url = "https://trenly.isellershop.com/api/v3/UpdateProducts"
     headers = {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + token,
