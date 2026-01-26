@@ -869,7 +869,7 @@ def createNewProduct(import_mode=None):
                 'require_shipping': False,
                 'need_scale': False,
                 'unit_of_measurement': 'pcs',
-                'is_active': False
+                'is_active': True
                 # 'buying_price': 4000,
                 # 'shipping_weight': 0,
                 # 'shipping_unit': 'g',
