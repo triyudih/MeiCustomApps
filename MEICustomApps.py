@@ -34,7 +34,7 @@ port = 1433
 user = 'useresb'
 password = 'mitoeasybuser201612'
 database = 'dummy_easyb' #'dummy_easyb' # 'dummy_easyb_live' # 'dummy_easyb_vnc' #
-database = 'MITO2024' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
+database = 'MAJU' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
 
 ##### REAMRRKKKKS:
 # update createProductTrannsfer function to set CreateBy and EditBy to UserLogin include GDV
@@ -49,9 +49,10 @@ database = 'MITO2024' #'MITO2024' # 'MAJU' # 'dummy_easyb_vnc' #
 # 2025-12-23 - Update fixing trenly rules and += 20000
 # 2025-12-31 - Update add new real late time 
 # 2026-01-15 - Update create product iseller
+# 2026-03-26 - Update create product iseller split 100 sku
 
 global Version
-Version = "260115"
+Version = "260326"
 
 print(f'Connect to {database[:3]}...')
 conn = pymssql.connect(server=server, port=port, user=user, password=password, database=database,autocommit=False)
@@ -1523,7 +1524,6 @@ def createPromoNonTrigger():
         producName = dataframe1.iloc[row, 1] if pd.notna(dataframe1.iloc[row, 1]) else None
         qty = dataframe1.iloc[row, 2] if pd.notna(dataframe1.iloc[row, 2]) else None
         price = dataframe1.iloc[row, 3] if pd.notna(dataframe1.iloc[row, 3]) else None
-
         if sku:  # hanya append kalau ada SKU
             product_tmpl_iseller = {
                 "promotion_title": intital_promo + "-" + str(sku),
@@ -1581,38 +1581,52 @@ def createPromoNonTrigger():
         print("No active promotions to push.")
     else:
         print(PromoProducts)
-        # return
-        # Promotions = json.dumps(Promotions)
-        response = requests.request("POST", url, headers=headers, json=PromoProducts)
-        if response.status_code in (495, 496, 525, 526):
-            response = requests.request("POST", url, headers=headers, json=PromoProducts, verify=False)
-        json_data = json.loads(response.text)
-        # print(json_data)
-        promotions = json_data.get("promotions", [])
+        while PromoProducts:
+            batch = PromoProducts[:100]
+            PromoProducts = PromoProducts[100:]
+            # return
+            # Promotions = json.dumps(Promotions)
+            response = requests.request("POST", url, headers=headers, json=batch)
+            if response.status_code in (495, 496, 525, 526):
+                response = requests.request("POST", url, headers=headers, json=batch, verify=False)
+            json_data = json.loads(response.text)
+            # print(json_data)
+            promotions = json_data.get("promotions", [])
 
-        # ubah ke list untuk tabulate
-        table = [
-            [
-                promo.get("promotion_id"),
-                promo.get("promotion_title"),
-                promo.get("is_active"),
-                promo.get("error_message"),
-                promo.get("is_success")
+            # ubah ke list untuk tabulate
+            table = [
+                [
+                    promo.get("promotion_id"),
+                    promo.get("promotion_title"),
+                    promo.get("is_active"),
+                    promo.get("error_message"),
+                    promo.get("is_success")
+                ]
+                for promo in promotions
             ]
-            for promo in promotions
-        ]
 
-        # header
-        headers = ["Promotion ID", "Title", "Active", "Error Message", "Success"]
+            # header
+            headersTable = ["Promotion ID", "Title", "Active", "Error Message", "Success"]
 
-        #### {'promotions': [{'promotion_id': 'a6b7cd7b-8579-49b3-bf2f-aae00953c59e', 'promotion_title': 'PROMO MEDAN 30%', 'is_active': True, 'error_message': None, 'is_success': True}, {'promotion_id': '781f1ed8-72fe-47f4-bcd5-3c2ed09a756c', 'promotion_title': 'PROMO MEDAN 30%', 'is_active': True, 'error_message': None, 'is_success': True}], 'error_message': None, 'status': True, 'time': '99:99:00.1250026', 'error_detail': None}
-        error_message = json_data.get('error_message')
-        status = json_data.get('status')
-        if status and not error_message:
-            print(f"✅ {len(PromoProducts)} promos have been created successfully.\n")
-        else:
-            print(Fore.RED +"❌ "+ "Error, please check the error message below:\n")
-            print(tabulate(table, headers=headers, tablefmt="grid"))
+            error_message = json_data.get('error_message')
+            if not promotions:
+                table = [
+                    [
+                        "",
+                        "",
+                        "",
+                        json_data.get('error_message'),
+                        ""
+                    ]
+                ]
+
+            #### {'promotions': [{'promotion_id': 'a6b7cd7b-8579-49b3-bf2f-aae00953c59e', 'promotion_title': 'PROMO MEDAN 30%', 'is_active': True, 'error_message': None, 'is_success': True}, {'promotion_id': '781f1ed8-72fe-47f4-bcd5-3c2ed09a756c', 'promotion_title': 'PROMO MEDAN 30%', 'is_active': True, 'error_message': None, 'is_success': True}], 'error_message': None, 'status': True, 'time': '99:99:00.1250026', 'error_detail': None}
+            status = json_data.get('status')
+            if status and not error_message:
+                print(f"✅ {len(batch)} promos have been created successfully.\n")
+            else:
+                print(Fore.RED +"❌ "+ "Error, please check the error message below:\n")
+                print(tabulate(table, headers=headersTable, tablefmt="grid"))
 
     input(Fore.LIGHTGREEN_EX +"Press Enter to continue...")
     clear()
